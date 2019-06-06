@@ -1,4 +1,4 @@
-# Chess
+# Checkers
 
 ## Installing the project && running on the local machine
 

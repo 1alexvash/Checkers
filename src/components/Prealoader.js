@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 const Prealoader = () => {
-  const [readyToPlay, setReadyToPlay] = useState(false);
+  const [readyToPlay, setReadyToPlay] = useState(true); // @dev only
 
   setTimeout(() => setReadyToPlay(true), 7000);
 

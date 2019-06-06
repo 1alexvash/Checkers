@@ -3,18 +3,14 @@ import "./scss/main.css";
 
 import ColumnLine from "./components/ColumnLine";
 import Prealoader from "./components/Prealoader";
-import RescueWindow from "./components/RescueWindow";
 import EndGame from "./components/EndGame";
 
 class App extends Component {
   state = {
     board: [],
-    turn: "white",
+    turn: "red",
     selectedFigure: { x: null, y: null },
-    winner: null,
-    showRescueWindow: false,
-    whitesDead: [],
-    blacksDead: []
+    winner: null
   };
 
   wipeTheBoard() {
@@ -32,7 +28,7 @@ class App extends Component {
       let row = [];
       for (let y = 0; y < 8; y++) {
         let index = x * 8 + y;
-        let bg = (x + y) % 2 ? "#333" : "white";
+        let bg = (x + y) % 2 ? "#333" : "red";
         row.push({ x, y, index, bg, figure: "", highlighted: false });
       }
       board.push(row);
@@ -43,21 +39,27 @@ class App extends Component {
   initFigures() {
     // Initialization of the figures
     let { board } = this.state;
+
     let figures = [
-      "rock",
-      "horse",
-      "bishop",
-      "queen",
-      "king",
-      "bishop",
-      "horse",
-      "rock"
+      [0, 0],
+      [2, 0],
+      [4, 0],
+      [6, 0],
+
+      [1, 1],
+      [3, 1],
+      [5, 1],
+      [7, 1],
+
+      [0, 2],
+      [2, 2],
+      [4, 2],
+      [6, 2]
     ];
-    figures.forEach((figure, index) => {
-      board[index][1].figure = "pawn-black";
-      board[index][6].figure = "pawn-white";
-      board[index][0].figure = figure + "-black";
-      board[index][7].figure = figure + "-white";
+
+    figures.forEach(figure => {
+      board[figure[0]][figure[1]].figure = "black-man";
+      board[figure[0]][figure[1] + 5].figure = "red-man";
     });
     this.setState({ board });
   }
@@ -97,7 +99,7 @@ class App extends Component {
   doesEnemyAtCell(x, y) {
     const { board, turn } = this.state;
     if (this.doesCellExist(x, y) && !this.doesCellEmpty(x, y)) {
-      if (board[x][y].figure.indexOf(turn) <= 0) {
+      if (board[x][y].figure.indexOf(turn) < 0) {
         return true;
       } else {
         return false;
@@ -107,7 +109,7 @@ class App extends Component {
     }
   }
 
-  pawnWhite(x, y) {
+  pawnRed(x, y) {
     let { board } = this.state;
 
     if (this.doesCellEmpty(x, y - 1)) {
@@ -323,81 +325,63 @@ class App extends Component {
   }
 
   selectCell = (x, y, figure) => {
-    let { board, selectedFigure, turn, whitesDead, blacksDead } = this.state;
+    let { board, selectedFigure, turn } = this.state;
     if (figure && figure.indexOf(turn) >= 0) {
       selectedFigure.x = x;
       selectedFigure.y = y;
       this.clearTable();
       this.setState({ selectedFigure });
-      if (figure.indexOf("pawn-black") >= 0) {
-        this.pawnBlack(x, y);
-      }
-      if (figure.indexOf("pawn-white") >= 0) {
-        this.pawnWhite(x, y);
-      }
-      if (figure.indexOf("rock") >= 0) {
-        this.rock(x, y);
-      }
-      if (figure.indexOf("horse") >= 0) {
-        this.horse(x, y);
-      }
-      if (figure.indexOf("bishop") >= 0) {
-        this.bishop(x, y);
-      }
-      if (figure.indexOf("queen") >= 0) {
-        this.queen(x, y);
-      }
-      if (figure.indexOf("king") >= 0) {
-        this.king(x, y);
+      switch (figure) {
+        case "black-man":
+          this.pawnBlack(x, y);
+          break;
+        case "red-man":
+          console.log("hm");
+          this.pawnRed(x, y);
+          break;
+        case "black-king":
+          this.king(x, y);
+          break;
+        case "red-king":
+          this.king(x, y);
+          break;
+        default:
+          break;
       }
     }
     // Clicked cell
     if (board[x][y].highlighted) {
-      if (board[x][y].figure !== "") {
-        if (board[x][y].figure.indexOf("pawn") !== 0) {
-          let { whitesDead, blacksDead } = this.state;
-          let victim = board[x][y].figure;
-          if (board[x][y].figure.indexOf("white") >= 0) {
-            whitesDead.push(victim);
-            this.setState({ whitesDead });
-          } else {
-            blacksDead.push(victim);
-            this.setState({ blacksDead });
-          }
-        }
-      }
-
-      if (board[x][y].figure === "king-black") {
-        this.setState({ winner: "White" });
-      }
-      if (board[x][y].figure === "king-white") {
-        this.setState({ winner: "Black" });
-      }
-      turn = turn === "white" ? "black" : "white"; // change turn after the move
+      // CHESS WIN CASE TURN IT INTO CHECKERS WIN CASE
+      // if (board[x][y].figure === "king-black") {
+      //   this.setState({ winner: "red" });
+      // }
+      // if (board[x][y].figure === "king-red") {
+      //   this.setState({ winner: "Black" });
+      // }
+      turn = turn === "red" ? "black" : "red"; // change turn after the move
       board[x][y].figure = board[selectedFigure.x][selectedFigure.y].figure;
       board[selectedFigure.x][selectedFigure.y].figure = "";
 
-      // White pawn reached the end of the board
-      if (
-        board[x][y].figure.indexOf("pawn-white") >= 0 &&
-        board[x][y].y === 0 &&
-        whitesDead.length > 0
-      ) {
-        this.setState({ showRescueWindow: true, selectedFigure: { x, y } });
-        this.clearTable();
-        return;
-      }
+      // REWORK THOSE FUNCTINOS too
+      // // red pawn reached the end of the board
+      // if (
+      //   board[x][y].figure.indexOf("pawn-red") >= 0 &&
+      //   board[x][y].y === 0
+      // ) {
+      //   this.setState({ selectedFigure: { x, y } });
+      //   this.clearTable();
+      //   return;
+      // }
 
-      // Black pawn reached the end of the board
-      if (
-        board[x][y].figure.indexOf("pawn-black") >= 0 &&
-        board[x][y].y === 7 &&
-        blacksDead.length > 0
-      ) {
-        this.setState({ showRescueWindow: true, selectedFigure: { x, y } });
-        this.clearTable();
-        return;
-      }
+      // // Black pawn reached the end of the board
+      // if (
+      //   board[x][y].figure.indexOf("pawn-black") >= 0 &&
+      //   board[x][y].y === 7
+      // ) {
+      //   this.setState({ selectedFigure: { x, y } });
+      //   this.clearTable();
+      //   return;
+      // }
 
       this.clearTable();
       this.setState({ turn, board, selectedFigure: { x: null, y: null } });
@@ -409,60 +393,17 @@ class App extends Component {
     this.initFigures();
     this.setState({
       winner: null,
-      turn: "white",
-      whitesDead: [],
-      blacksDead: []
-    });
-  };
-
-  rescueFigure = (x, y, figure) => {
-    let { board, selectedFigure, turn, whitesDead, blacksDead } = this.state;
-
-    board[selectedFigure.x][selectedFigure.y].figure = figure;
-
-    // Removing the figure from the dead list after the rescuing
-    if (turn === "white") {
-      whitesDead.splice(whitesDead.indexOf(figure), 1);
-    } else {
-      blacksDead.splice(blacksDead.indexOf(figure), 1);
-    }
-
-    turn = turn === "white" ? "black" : "white"; // change turn after the rescuing
-
-    this.setState({
-      showRescueWindow: false,
-      board,
-      selectedFigure: { x: null, y: null },
-      turn,
-      whitesDead,
-      blacksDead
+      turn: "red"
     });
   };
 
   render() {
-    let {
-      turn,
-      board,
-      selectedFigure,
-      winner,
-      showRescueWindow,
-      whitesDead,
-      blacksDead
-    } = this.state;
+    let { turn, board, selectedFigure, winner } = this.state;
 
     return (
       <div className="App">
         <Prealoader />
-        {showRescueWindow ? (
-          <RescueWindow
-            turn={turn}
-            whitesDead={whitesDead}
-            blacksDead={blacksDead}
-            onClick={this.rescueFigure}
-            selectedFigure={selectedFigure}
-          />
-        ) : null}
-        {winner ? <EndGame winner={winner} playAgain={this.playAgain} /> : null}
+        <EndGame winner={winner} playAgain={this.playAgain} />
         <div className="grid">
           {board.map((column, columnIndex) => (
             <ColumnLine
