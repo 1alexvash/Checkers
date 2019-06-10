@@ -1,13 +1,13 @@
 {
   "main.css": "/Checkers/static/css/main.a0bb2efb.chunk.css",
-  "main.js": "/Checkers/static/js/main.4f3afc01.chunk.js",
-  "main.js.map": "/Checkers/static/js/main.4f3afc01.chunk.js.map",
+  "main.js": "/Checkers/static/js/main.557f7f18.chunk.js",
+  "main.js.map": "/Checkers/static/js/main.557f7f18.chunk.js.map",
   "runtime~main.js": "/Checkers/static/js/runtime~main.1214e038.js",
   "runtime~main.js.map": "/Checkers/static/js/runtime~main.1214e038.js.map",
   "static/js/2.bd6981d1.chunk.js": "/Checkers/static/js/2.bd6981d1.chunk.js",
   "static/js/2.bd6981d1.chunk.js.map": "/Checkers/static/js/2.bd6981d1.chunk.js.map",
   "index.html": "/Checkers/index.html",
-  "precache-manifest.d9584c5a82c8b9c56fef16627959ffbe.js": "/Checkers/precache-manifest.d9584c5a82c8b9c56fef16627959ffbe.js",
+  "precache-manifest.399dc9804f0bd809b9a795af7c847c31.js": "/Checkers/precache-manifest.399dc9804f0bd809b9a795af7c847c31.js",
   "service-worker.js": "/Checkers/service-worker.js",
   "static/css/main.a0bb2efb.chunk.css.map": "/Checkers/static/css/main.a0bb2efb.chunk.css.map"
 }
