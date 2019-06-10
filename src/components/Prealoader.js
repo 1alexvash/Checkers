@@ -10,7 +10,7 @@ const Prealoader = () => {
       {readyToPlay ? null : (
         <div className="Prealoader">
           <div className="content">
-            <img src="images/mobile-icon.png" className="logo" alt="horse" />
+            <img src="images/logo.png" className="logo" alt="horse" />
             <p className="author">
               Author: <em>Alexander Vashchuk</em>
             </p>

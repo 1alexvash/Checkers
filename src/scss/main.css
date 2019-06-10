@@ -153,6 +153,8 @@ input {
 }
 
 .App .Prealoader .content .logo {
+  width: 100%;
+  padding: 20px;
   margin: 20px 0;
 }
 
