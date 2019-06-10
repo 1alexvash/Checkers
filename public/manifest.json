@@ -1,6 +1,6 @@
 {
-  "short_name": "Chess",
-  "name": "Play Chess",
+  "short_name": "Checkers",
+  "name": "Checkers Chess",
   "icons": [
     {
       "src": "favicon.ico",
