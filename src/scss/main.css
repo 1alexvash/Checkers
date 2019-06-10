@@ -21,7 +21,7 @@ input {
   margin: auto;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 960px) {
   .App {
     width: 100%;
   }
@@ -212,8 +212,8 @@ input {
   left: 50%;
   -webkit-transform: translate(-50%, -50%);
           transform: translate(-50%, -50%);
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
 }
 
 @media (max-width: 480px) {

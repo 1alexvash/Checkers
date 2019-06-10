@@ -10,7 +10,8 @@ class App extends Component {
     board: [],
     turn: "red",
     selectedFigure: { x: null, y: null },
-    winner: null
+    winner: null,
+    path: []
   };
 
   wipeTheBoard() {
@@ -40,7 +41,7 @@ class App extends Component {
     // Initialization of the figures
     let { board } = this.state;
 
-    let figures = [
+    let blackTeam = [
       [0, 0],
       [2, 0],
       [4, 0],
@@ -57,11 +58,30 @@ class App extends Component {
       [6, 2]
     ];
 
-    figures.forEach(figure => {
+    blackTeam.forEach(figure => {
       board[figure[0]][figure[1]].figure = "black-man";
-      board[figure[0]][figure[1] + 5].figure = "red-man";
     });
-    this.setState({ board });
+
+    let redTeam = [
+      [1, 5],
+      [3, 5],
+      [5, 5],
+      [7, 5],
+
+      [0, 6],
+      [2, 6],
+      [4, 6],
+      [6, 6],
+
+      [1, 7],
+      [3, 7],
+      [5, 7],
+      [7, 7]
+    ];
+
+    redTeam.forEach(figure => {
+      board[figure[0]][figure[1]].figure = "red-man";
+    });
   }
 
   componentWillMount = () => {
@@ -109,240 +129,179 @@ class App extends Component {
     }
   }
 
-  pawnRed(x, y) {
-    let { board } = this.state;
+  drawHighlighting() {
+    const { board, path } = this.state;
+    path.forEach(point => {
+      if (this.doesCellEmpty(point.x, point.y)) {
+        board[point.x][point.y].highlighted = true;
+      }
+    });
 
-    if (this.doesCellEmpty(x, y - 1)) {
-      board[x][y - 1].highlighted = true;
-      if (y === 6 && this.doesCellEmpty(x, y - 2)) {
-        board[x][y - 2].highlighted = true;
+    this.setState({ board, path });
+  }
+
+  pawnContinuePath(x, y, checkFrom) {
+    const { path } = this.state;
+
+    let initialRef = path.find(p => p.x === x && p.y === y);
+    // Checking from Top Left
+    if (checkFrom !== "Top Left") {
+      if (
+        this.doesEnemyAtCell(x - 1, y - 1) &&
+        this.doesCellEmpty(x - 2, y - 2)
+      ) {
+        const index = path.push({ x: x - 1, y: y - 1, ref: initialRef });
+        path.push({ x: x - 2, y: y - 2, ref: path[index - 1] });
+
+        this.pawnContinuePath(x - 2, y - 2, "Bottom Right");
       }
     }
-    if (this.doesEnemyAtCell(x - 1, y - 1)) {
-      board[x - 1][y - 1].highlighted = true;
+    // Checking from Top Right
+    if (checkFrom !== "Top Right") {
+      if (
+        this.doesEnemyAtCell(x + 1, y - 1) &&
+        this.doesCellEmpty(x + 2, y - 2)
+      ) {
+        const index = path.push({ x: x + 1, y: y - 1, ref: initialRef });
+        path.push({ x: x + 2, y: y - 2, ref: path[index - 1] });
+        this.pawnContinuePath(x + 2, y - 2, "Bottom Left");
+      }
     }
-    if (this.doesEnemyAtCell(x + 1, y - 1)) {
-      board[x + 1][y - 1].highlighted = true;
+    // Checking from Bottom Left
+    if (checkFrom !== "Bottom Left") {
+      if (
+        this.doesEnemyAtCell(x - 1, y + 1) &&
+        this.doesCellEmpty(x - 2, y + 2)
+      ) {
+        const index = path.push({ x: x - 1, y: y + 1, ref: initialRef });
+        path.push({ x: x - 2, y: y + 2, ref: path[index - 1] });
+        this.pawnContinuePath(x - 2, y + 2, "Top Right");
+      }
+    }
+    // Checking from Bottom Right
+    if (checkFrom !== "Bottom Right") {
+      if (
+        this.doesEnemyAtCell(x + 1, y + 1) &&
+        this.doesCellEmpty(x + 2, y + 2)
+      ) {
+        const index = path.push({ x: x + 1, y: y + 1, ref: initialRef });
+        path.push({ x: x + 2, y: y + 2, ref: path[index - 1] });
+        this.pawnContinuePath(x + 2, y + 2, "Top Left");
+      }
     }
 
-    this.setState({ board });
+    this.drawHighlighting();
+  }
+
+  pawnCheckDirection(x, y, path, direction) {
+    // Top Left
+    if (direction === "Top Left") {
+      if (this.doesCellEmpty(x - 1, y - 1)) {
+        path.push({ x: x - 1, y: y - 1, ref: { x, y, ref: "" } });
+      } else if (
+        this.doesEnemyAtCell(x - 1, y - 1) &&
+        this.doesCellEmpty(x - 2, y - 2)
+      ) {
+        const index = path.push({ x: x - 1, y: y - 1, ref: { x, y, ref: "" } });
+        path.push({ x: x - 2, y: y - 2, ref: path[index - 1] });
+        this.setState({ path }, () =>
+          this.pawnContinuePath(x - 2, y - 2, "Bottom Right")
+        );
+      }
+    }
+    // Top Right
+    if (direction === "Top Right") {
+      if (this.doesCellEmpty(x + 1, y - 1)) {
+        path.push({ x: x + 1, y: y - 1, ref: { x, y, ref: "" } });
+      } else if (
+        this.doesEnemyAtCell(x + 1, y - 1) &&
+        this.doesCellEmpty(x + 2, y - 2)
+      ) {
+        const index = path.push({ x: x + 1, y: y - 1, ref: { x, y, ref: "" } });
+        path.push({ x: x + 2, y: y - 2, ref: path[index - 1] });
+        this.setState({ path }, () =>
+          this.pawnContinuePath(x + 2, y - 2, "Bottom Left")
+        );
+      }
+    }
+    // Top Left
+    if (direction === "Bottom Left") {
+      if (this.doesCellEmpty(x - 1, y + 1)) {
+        path.push({ x: x - 1, y: y + 1, ref: { x, y, ref: "" } });
+      } else if (
+        this.doesEnemyAtCell(x - 1, y + 1) &&
+        this.doesCellEmpty(x - 2, y + 2)
+      ) {
+        const index = path.push({ x: x - 1, y: y + 1, ref: { x, y, ref: "" } });
+        path.push({ x: x - 2, y: y + 2, ref: path[index - 1] });
+        this.setState({ path }, () =>
+          this.pawnContinuePath(x - 2, y + 2, "Top Right")
+        );
+      }
+    }
+    // Top Left
+    if (direction === "Bottom Right") {
+      if (this.doesCellEmpty(x + 1, y + 1)) {
+        path.push({ x: x + 1, y: y + 1, ref: { x, y, ref: "" } });
+      } else if (
+        this.doesEnemyAtCell(x + 1, y + 1) &&
+        this.doesCellEmpty(x + 2, y + 2)
+      ) {
+        const index = path.push({ x: x + 1, y: y + 1, ref: { x, y, ref: "" } });
+        path.push({ x: x + 2, y: y + 2, ref: path[index - 1] });
+        this.setState({ path }, () =>
+          this.pawnContinuePath(x + 2, y + 2, "Top Left")
+        );
+      }
+    }
+  }
+
+  pawnRed(x, y) {
+    let path = [];
+
+    this.pawnCheckDirection(x, y, path, "Top Left");
+    this.pawnCheckDirection(x, y, path, "Top Right");
+
+    this.setState({ path }, () => this.drawHighlighting());
   }
   pawnBlack(x, y) {
-    let { board } = this.state;
+    let path = [];
 
-    if (this.doesCellEmpty(x, y + 1)) {
-      board[x][y + 1].highlighted = true;
-      if (y === 1 && this.doesCellEmpty(x, y + 2)) {
-        board[x][y + 2].highlighted = true;
-      }
-    }
-    if (this.doesEnemyAtCell(x - 1, y + 1)) {
-      board[x - 1][y + 1].highlighted = true;
-    }
-    if (this.doesEnemyAtCell(x + 1, y + 1)) {
-      board[x + 1][y + 1].highlighted = true;
-    }
+    this.pawnCheckDirection(x, y, path, "Bottom Left");
+    this.pawnCheckDirection(x, y, path, "Bottom Right");
 
-    this.setState({ board });
+    this.setState({ path }, () => this.drawHighlighting());
   }
-  rock(x, y) {
-    const { board } = this.state;
 
-    let i;
-
-    // Move To Top
-    i = 1;
-    while (i <= 7) {
-      if (this.doesCellEmpty(x, y - i)) {
-        board[x][y - i].highlighted = true;
-      } else if (this.doesEnemyAtCell(x, y - i)) {
-        board[x][y - i].highlighted = true;
-        break;
-      } else {
-        break;
-      }
-      i++;
-    }
-
-    // Move To Bottom
-    i = 1;
-    while (i <= 7) {
-      if (this.doesCellEmpty(x, y + i)) {
-        board[x][y + i].highlighted = true;
-      } else if (this.doesEnemyAtCell(x, y + i)) {
-        board[x][y + i].highlighted = true;
-        break;
-      } else {
-        break;
-      }
-      i++;
-    }
-
-    // Move To Left
-    i = 1;
-    while (i <= 7) {
-      if (this.doesCellEmpty(x - i, y)) {
-        board[x - i][y].highlighted = true;
-      } else if (this.doesEnemyAtCell(x - i, y)) {
-        board[x - i][y].highlighted = true;
-        break;
-      } else {
-        break;
-      }
-      i++;
-    }
-
-    // Move To Rigth
-    i = 1;
-    while (i <= 7) {
-      if (this.doesCellEmpty(x + i, y)) {
-        board[x + i][y].highlighted = true;
-      } else if (this.doesEnemyAtCell(x + i, y)) {
-        board[x + i][y].highlighted = true;
-        break;
-      } else {
-        break;
-      }
-      i++;
-    }
-
-    this.setState({ board });
-  }
-  horse(x, y) {
-    const { board } = this.state;
-    const values = [
-      { x: x - 2, y: y - 1 },
-      { x: x + 2, y: y - 1 },
-      { x: x - 2, y: y + 1 },
-      { x: x + 2, y: y + 1 },
-      { x: x - 1, y: y - 2 },
-      { x: x + 1, y: y - 2 },
-      { x: x - 1, y: y + 2 },
-      { x: x + 1, y: y + 2 }
-    ];
-
-    values.forEach(value => {
-      if (
-        this.doesCellEmpty(value.x, value.y) ||
-        this.doesEnemyAtCell(value.x, value.y)
-      ) {
-        board[value.x][value.y].highlighted = true;
-      }
-    });
-    this.setState({ board });
-  }
-  bishop(x, y) {
-    const { board } = this.state;
-
-    let i;
-
-    // Move To Top Left
-    i = 1;
-    while (i <= 7) {
-      if (this.doesCellEmpty(x - i, y - i)) {
-        board[x - i][y - i].highlighted = true;
-      } else if (this.doesEnemyAtCell(x - i, y - i)) {
-        board[x - i][y - i].highlighted = true;
-        break;
-      } else {
-        break;
-      }
-      i++;
-    }
-
-    // Move To Top Right
-    i = 1;
-    while (i <= 7) {
-      if (this.doesCellEmpty(x + i, y - i)) {
-        board[x + i][y - i].highlighted = true;
-      } else if (this.doesEnemyAtCell(x + i, y - i)) {
-        board[x + i][y - i].highlighted = true;
-        break;
-      } else {
-        break;
-      }
-      i++;
-    }
-
-    // Move To Bottom Left
-    i = 1;
-    while (i <= 7) {
-      if (this.doesCellEmpty(x - i, y + i)) {
-        board[x - i][y + i].highlighted = true;
-      } else if (this.doesEnemyAtCell(x - i, y + i)) {
-        board[x - i][y + i].highlighted = true;
-        break;
-      } else {
-        break;
-      }
-      i++;
-    }
-
-    // Move To Bottom Right
-    i = 1;
-    while (i <= 7) {
-      if (this.doesCellEmpty(x + i, y + i)) {
-        board[x + i][y + i].highlighted = true;
-      } else if (this.doesEnemyAtCell(x + i, y + i)) {
-        board[x + i][y + i].highlighted = true;
-        break;
-      } else {
-        break;
-      }
-      i++;
-    }
-
-    this.setState({ board });
-  }
-  queen(x, y) {
-    this.rock(x, y);
-    this.bishop(x, y);
-  }
   king(x, y) {
-    let { board } = this.state;
+    let path = [];
 
-    const values = [
-      { x: x - 1, y: y - 1 },
-      { x: x, y: y - 1 },
-      { x: x + 1, y: y - 1 },
-      { x: x + 1, y: y },
-      { x: x + 1, y: y + 1 },
-      { x: x, y: y + 1 },
-      { x: x - 1, y: y + 1 },
-      { x: x - 1, y: y }
-    ];
+    this.pawnCheckDirection(x, y, path, "Top Left");
+    this.pawnCheckDirection(x, y, path, "Top Right");
+    this.pawnCheckDirection(x, y, path, "Bottom Left");
+    this.pawnCheckDirection(x, y, path, "Bottom Right");
 
-    values.forEach(value => {
-      if (
-        this.doesCellEmpty(value.x, value.y) ||
-        this.doesEnemyAtCell(value.x, value.y)
-      ) {
-        board[value.x][value.y].highlighted = true;
-      }
-    });
-
-    this.setState({ board });
+    this.setState({ path }, () => this.drawHighlighting());
   }
 
   selectCell = (x, y, figure) => {
-    let { board, selectedFigure, turn } = this.state;
+    let { board, selectedFigure, turn, path } = this.state;
     if (figure && figure.indexOf(turn) >= 0) {
       selectedFigure.x = x;
       selectedFigure.y = y;
       this.clearTable();
       this.setState({ selectedFigure });
       switch (figure) {
+        case "red-man":
+          this.pawnRed(x, y);
+          break;
         case "black-man":
           this.pawnBlack(x, y);
           break;
-        case "red-man":
-          console.log("hm");
-          this.pawnRed(x, y);
-          break;
-        case "black-king":
+        case "red-king":
           this.king(x, y);
           break;
-        case "red-king":
+        case "black-king":
           this.king(x, y);
           break;
         default:
@@ -351,37 +310,77 @@ class App extends Component {
     }
     // Clicked cell
     if (board[x][y].highlighted) {
-      // CHESS WIN CASE TURN IT INTO CHECKERS WIN CASE
-      // if (board[x][y].figure === "king-black") {
-      //   this.setState({ winner: "red" });
-      // }
-      // if (board[x][y].figure === "king-red") {
-      //   this.setState({ winner: "Black" });
-      // }
+      // Kill figures
+      let myPoint = path.find(point => point.x === x && point.y === y);
+      board[myPoint.x][myPoint.y].figure = "";
+      if (this.doesEnemyAtCell(myPoint.x, myPoint.y)) {
+        board[myPoint.x][myPoint.y].figure = "";
+      }
+
+      // from pawn to king
+      if (
+        myPoint.y === 0 &&
+        board[selectedFigure.x][selectedFigure.y].figure.indexOf("red-man") >= 0
+      ) {
+        board[selectedFigure.x][selectedFigure.y].figure = "red-king";
+      }
+      if (
+        myPoint.y === 7 &&
+        board[selectedFigure.x][selectedFigure.y].figure.indexOf("black-man") >=
+          0
+      ) {
+        board[selectedFigure.x][selectedFigure.y].figure = "black-king";
+      }
+
+      while (myPoint.ref) {
+        myPoint = myPoint.ref;
+
+        // from pawn to king
+        if (
+          myPoint.y === 0 &&
+          board[selectedFigure.x][selectedFigure.y].figure.indexOf("red-man") >=
+            0
+        ) {
+          board[selectedFigure.x][selectedFigure.y].figure = "red-king";
+        }
+        if (
+          myPoint.y === 7 &&
+          board[selectedFigure.x][selectedFigure.y].figure.indexOf(
+            "black-man"
+          ) >= 0
+        ) {
+          board[selectedFigure.x][selectedFigure.y].figure = "black-king";
+        }
+
+        if (this.doesEnemyAtCell(myPoint.x, myPoint.y)) {
+          board[myPoint.x][myPoint.y].figure = "";
+        }
+      }
+
+      // Win Case
+      let redFigures = 0;
+      let blackFigures = 0;
+      board.forEach(column =>
+        column.forEach(row => {
+          if (row.figure.indexOf("red") >= 0) {
+            redFigures++;
+          }
+          if (row.figure.indexOf("black") >= 0) {
+            blackFigures++;
+          }
+        })
+      );
+
+      if (redFigures === 0) {
+        this.setState({ winner: "black" });
+      }
+      if (blackFigures === 0) {
+        this.setState({ winner: "red" });
+      }
+
       turn = turn === "red" ? "black" : "red"; // change turn after the move
       board[x][y].figure = board[selectedFigure.x][selectedFigure.y].figure;
       board[selectedFigure.x][selectedFigure.y].figure = "";
-
-      // REWORK THOSE FUNCTINOS too
-      // // red pawn reached the end of the board
-      // if (
-      //   board[x][y].figure.indexOf("pawn-red") >= 0 &&
-      //   board[x][y].y === 0
-      // ) {
-      //   this.setState({ selectedFigure: { x, y } });
-      //   this.clearTable();
-      //   return;
-      // }
-
-      // // Black pawn reached the end of the board
-      // if (
-      //   board[x][y].figure.indexOf("pawn-black") >= 0 &&
-      //   board[x][y].y === 7
-      // ) {
-      //   this.setState({ selectedFigure: { x, y } });
-      //   this.clearTable();
-      //   return;
-      // }
 
       this.clearTable();
       this.setState({ turn, board, selectedFigure: { x: null, y: null } });
@@ -398,7 +397,7 @@ class App extends Component {
   };
 
   render() {
-    let { turn, board, selectedFigure, winner } = this.state;
+    let { board, selectedFigure, winner } = this.state;
 
     return (
       <div className="App">

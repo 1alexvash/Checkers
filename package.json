@@ -2,7 +2,7 @@
   "name": "chess",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://1alexvash.github.io/Chess/",
+  "homepage": "https://1alexvash.github.io/Checkers/",
   "dependencies": {
     "classnames": "^2.2.6",
     "gh-pages": "^2.0.1",
